@@ -39,6 +39,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
   try {
     const result = await handler(args ?? {});
+    // A tool may hand back MCP content itself (text + images the agent can look at).
+    if (result && Array.isArray(result.__mcp_content)) {
+      return { content: result.__mcp_content };
+    }
     return {
       content: [
         {

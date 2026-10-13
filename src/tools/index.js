@@ -41,6 +41,11 @@ import * as emu_watchpoint from "./emu_watchpoint.js";
 import * as emu_breakpoint from "./emu_breakpoint.js";
 // Homemade toolchain pipeline (t900cc + t900as + t900ld + romtool).
 import * as compile_homemade from "./compile_homemade.js";
+// NgpCraft Studio (GB Studio projects compiled for the NGPC by the NgpCraft V3), 2026-10-13.
+import * as studio_event from "./studio_event.js";
+import * as studio_check from "./studio_check.js";
+import * as studio_run from "./studio_run.js";
+import * as studio_save from "./studio_save.js";
 
 const modules = [
   bug_check,
@@ -82,6 +87,10 @@ const modules = [
   emu_watchpoint,
   emu_breakpoint,
   compile_homemade,
+  studio_event,
+  studio_check,
+  studio_run,
+  studio_save,
 ];
 
 export const toolDefinitions = modules.map((m) => m.definition);

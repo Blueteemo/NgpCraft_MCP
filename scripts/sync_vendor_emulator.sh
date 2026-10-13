@@ -9,7 +9,7 @@
 # Usage:  bash scripts/sync_vendor_emulator.sh [path-to-upstream-repo]
 set -euo pipefail
 
-UP="${1:-C:/Users/wilfr/Documents/GitHub/Ngpcraft_emulator}"
+UP="${1:-${NGPC_EMULATOR_SRC:?usage: bash scripts/sync_vendor_emulator.sh <NgpCraft emulator checkout> (or set NGPC_EMULATOR_SRC)}}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 V="$HERE/vendor/emulator"
 

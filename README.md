@@ -90,6 +90,20 @@ Any of these prompts should now work:
 | `ngpc_visual_diff` | working | Render two C snippets at frame N + return per-pixel diff PNG (magenta on dimmed grey) |
 | `ngpc_validate_project` | working | Lint every .c file under a directory, aggregated report (per file, per rule) |
 | `ngpc_compile_official` | working (local toolchain) | Build a project via the LOCAL Toshiba toolchain (cc900 + asm900 + tulink + tuconv + s242ngp). Returns produced ROM. The .exe stay on the user's PC — never bundled or redistributed. |
+| `ngpc_studio_event` | working | **NgpCraft Studio** (GB Studio projects for the NGPC): the exact JSON of any of the 156 GB Studio events — fields, defaults, a valid example, NGPC status (identical / adapted / refused). Use before writing an event by hand |
+| `ngpc_studio_check` | working | **NgpCraft Studio**: one call = lint (GB Studio habits that misbehave on the NGPC, with fix), per-scene budget (tiles of 512, palettes), V3 compile with grouped warnings, ROM build, save slots that fit |
+| `ngpc_studio_run` | working | **NgpCraft Studio**: play the game from any scene on the native core, scripted buttons / teleport / variable writes / power cycle, returns variables BY NAME and screenshots as images. Clean-room HLE BIOS included |
+| `ngpc_studio_save` | working | **NgpCraft Studio**: read the cartridge's save journal (slots, signature of this build or not, variables by name) |
+
+The `ngpc_studio_*` tools serve **NgpCraft Studio**: GB Studio 4.3.2 projects compiled for the NGPC by the
+NgpCraft V3 compiler. They run `src/tools/studio/ngpc_studio.py` with the V3 found like the editor finds it
+(`v3_root` argument, `NGPCRAFT_V3_HOME`, or the copy bundled with an installed NgpCraft Studio, whose Python
+is used too), the Toshiba toolchain to link a ROM (`toolchain_path`, `NGPC_TOSHIBA_HOME`, default `C:\t900`),
+and this repository's emulator core with its clean-room HLE BIOS (`vendor/emulator/hle_bios/`), the BIOS the
+editor's own player uses for these games. The event catalogue `src/data/studio_events.json` is built from the
+editor's event definitions by `scripts/build_studio_events.mjs`; the rules an agent needs are in
+`corpus/studio/NGPCRAFT_STUDIO_RULES.md` (found by `ngpc_doc_search`). Smoke test:
+`node scripts/smoke_studio_tools.mjs <project> <work dir> [<v3 root>]`.
 
 The transpiler-backed tools (`ngpc_lint` / `ngpc_quickrun` / `ngpc_screenshot` / `ngpc_png_to_*`) load the Live Editor JS modules into a Node `vm` context via `src/tools/_transpiler_loader.js` — no browser, no DOM. Audio (PSG) is intentionally not initialised: voice register state is preserved but no WebAudio context is created.
 

@@ -1341,7 +1341,7 @@ The full supported execution subset as of 2026-05-22:
     - reproducing the common bootstrap / smoke context without repeating `--seed-xsp 0x6C00`
     - composing with narrower register presets such as `--seed-zero-toolchain-loop-iz`
   - local provenance:
-    - [RESET_STATE.md](C:/Users/wilfr/Desktop/NGPC_RAG/04_MY_PROJECTS/NgpCraft_emulator/specs/RESET_STATE.md:42) documents the BIOS hand-off `regs.xsp = 0x00006C00`
+    - [RESET_STATE.md](specs/RESET_STATE.md) documents the BIOS hand-off `regs.xsp = 0x00006C00`
   - this is a sourced hand-off-layer shortcut, not a claim that the raw hardware reset stack is fully modeled
   - explicit `--seed-reg XSP=...` or `--seed-xsp ...` still overrides this preset
 - **minimal BIOS-hand-off session shortcut - widened 2026-07-02 (pass 130)**:
@@ -1354,7 +1354,7 @@ The full supported execution subset as of 2026-05-22:
     - reproducing the same narrow BIOS hand-off context the UI/session layer now applies by default
     - unblocking CLI reads from `INTNEST` without inventing any DMA control-register state
   - local provenance:
-    - [RESET_STATE.md](C:/Users/wilfr/Desktop/NGPC_RAG/04_MY_PROJECTS/NgpCraft_emulator/specs/RESET_STATE.md:55) documents `INTNEST = 0` as a hand-off-layer invariant, not a raw bootstrap claim
+    - [RESET_STATE.md](specs/RESET_STATE.md) documents `INTNEST = 0` as a hand-off-layer invariant, not a raw bootstrap claim
   - this is a hand-off-layer shortcut, not a statement that the full reset-time control-register file is modeled
   - explicit `--seed-reg NAME=VALUE` or `--seed-xsp ...` still overrides this preset
 - **word-memory multiply/divide into XR32 - widened 2026-05-22 (pass 67)**:

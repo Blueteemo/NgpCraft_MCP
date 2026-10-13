@@ -486,7 +486,7 @@ Snapshot prototype Python au 2026-05-23 (post pass 77, sourced BIOS-hand-off XSP
     - `XSP = 0x00006C00`
   - explicit `--seed-reg XSP=...` or `--seed-xsp ...` still overrides the preset
 - provenance:
-  - derived from [RESET_STATE.md](C:/Users/wilfr/Desktop/NGPC_RAG/04_MY_PROJECTS/NgpCraft_emulator/specs/RESET_STATE.md:42)
+  - derived from [RESET_STATE.md](specs/RESET_STATE.md)
   - local BIOS hand-off contract there sets `regs.xsp = 0x00006C00`
 - exploration value:
   - removes the repeated magic-number `--seed-xsp 0x6C00` from the common smoke path

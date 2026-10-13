@@ -85,7 +85,7 @@ unhappy-path conditions (missing file, bad hex, reversed range).
 
 - The MCP server (`@ngpcraft/mcp`) consumes this script through
   `vendor/disasm/ngpc_disasm.py`. The same edits were synced into the workspace
-  copy at `Desktop/NGPC_RAG/04_MY_PROJECTS/NgpCraft_Disasm/` and into the MCP
+  copy of NgpCraft_Disasm and into the MCP
   vendor snapshot.
 - Bug-DB entry `CB_FAMILY_BROKEN` in `bugs_silicon.json` was tightened: the
   scope is "0xCB prefix specifically" (validated `CB 81`); the broader "C-prefix

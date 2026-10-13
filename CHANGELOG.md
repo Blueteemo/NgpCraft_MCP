@@ -3,6 +3,17 @@
 
 ## Unreleased
 
+- **NgpCraft Studio support: four `ngpc_studio_*` tools and a rules sheet, for agents writing GB Studio
+  projects compiled for the NGPC by the NgpCraft V3.** `ngpc_studio_event` gives the exact JSON of the 156
+  GB Studio events (fields, defaults, a valid example, NGPC status) — event JSON is what agents invent.
+  `ngpc_studio_check` lints, budgets, compiles and builds in one call (warnings grouped by kind, save slots
+  that fit). `ngpc_studio_run` plays any scene on the native core with scripted buttons, teleport, variable
+  writes and power cycles, and returns variables by name and screenshots as images; it counts video frames,
+  so a slow scene init shows (a title screen once stayed white 6.8 s while each of 48 Peek Data rescanned
+  the save journal). `ngpc_studio_save` reads the save journal (slots, build signature, variables). The
+  clean-room HLE BIOS is now shipped in `vendor/emulator/hle_bios/`. Rules: `corpus/studio/`. Tools may now
+  return MCP content directly (screenshots as images).
+
 - **Corpus: the open-source toolchain section is current again, and carries five lessons
   for anyone writing tools for this CPU.** It had been frozen at "two lines as of 2026-05";
   it now shows the certified per-stage state (frontend 73/73 byte-exact, assembler 780/780

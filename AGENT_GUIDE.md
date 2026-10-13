@@ -86,6 +86,28 @@ nonsense rather than an error. Always ask which game it came from.
 
 ---
 
+## NgpCraft Studio (GB Studio projects) — a different workflow
+
+When the game is an **NgpCraft Studio** project (`.gbsproj`: GB Studio 4.3.2 compiled for the NGPC by the
+NgpCraft V3), you do not write C: you write GB Studio resources (`project/**/*.gbsres`, JSON). Four tools:
+
+| You want to | Tool |
+|---|---|
+| write an event (its args, its child scripts, its NGPC status) | `ngpc_studio_event` — never guess an event's JSON |
+| know whether the project is valid, fits, compiles, builds; what the save can hold | `ngpc_studio_check` (after every edit) |
+| see it work: a scene, a scenario of buttons, variables by name, screenshots | `ngpc_studio_run` |
+| understand a save that "does not work" | `ngpc_studio_save` |
+
+Rules that cost real time on these games (trigger scripts freeze the player, one Switch Scene per shared
+script, text redrawn as a whole, saves = one slot for a big game...): `ngpc_doc_search` "NgpCraft Studio"
+→ `corpus/studio/NGPCRAFT_STUDIO_RULES.md`.
+
+`ngpc_studio_run` boots with the clean-room **HLE BIOS** shipped in `vendor/emulator/hle_bios/`: the code the
+V3 generates only uses the BIOS services it implements, and it is what the editor's own player runs. The
+warning above (no BIOS = a lying picture) is about commercial games and C code calling other services; pass
+`bios_path` to run a real BIOS. It counts **video frames** (60 a second) with the cartridge's wait-states:
+a slow scene init shows as frames of the same picture — look at the screenshots, not only at the variables.
+
 ## Symptom → tool
 
 | The user says | Reach for |
