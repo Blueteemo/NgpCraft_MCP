@@ -8,7 +8,7 @@ export const definition = {
     "Its headline use is a bug a person can reproduce but not describe: they save a state in NgpCraft Emulator (F2) one frame before the problem, hand over the .s0, and this replays it — `state_path` + `hold` + `frames` answers 'what happens if I press A here?' in one call. " +
     "Needs the compiled core (vendor/emulator/cpp/build/) and, for most commercial games, a real bios.bin the user supplies. Backed by ngpc_native.py `run`. " +
     "Runs with the SILICON-CALIBRATED cartridge wait-states on (fetch = 3 cycles/byte), so it is timed like hardware rather than the ~3x-too-fast free-fetch default of the raw core; the answer says which model ran, in `timing`. " +
-    "Every run also returns `hw_safety`: a starved watchdog or a stack that wandered into the BIOS page — two faults a real console punishes and most emulators never mention.",
+    "Every run also returns `hw_safety`: a starved watchdog or a stack that wandered into the BIOS page — two faults a real console punishes and most emulators never mention. And `hygiene` (not from a save state): user-RAM globals the ROM READ before ever writing them -- 0 here, garbage on a console, the classic 'works in the emulator, frozen on hardware'; named from the .map beside the ROM.",
   inputSchema: {
     type: "object",
     properties: {

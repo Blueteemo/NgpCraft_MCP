@@ -101,6 +101,24 @@ NGPC_API int ngpc_flash_restore(ngpc_t* h, uint32_t address,
     return 0;
 }
 
+/* ⛔ THE SAVE IS THE CELLS, NOT THE BUS. `read8` asks the flash state machine first:
+ * a chip that is busy (an erase or a program in progress, or the endless window of a
+ * 1 asked over a 0), failed, or in autoselect answers STATUS or its ID to every
+ * address of its window -- and the FlashAck read even consumes the "done". Saving
+ * through it while a game sat in its poll loop wrote `00 40 00 40 ...` over all
+ * 2 MiB of the .ngc: header gone, every emulator and the flashcart then stop at the
+ * BIOS. User report 2026-10-17, reproduced. `mem` holds what the cells hold (a program
+ * or an erase commits its bytes before arming the busy window). */
+NGPC_API int ngpc_flash_peek(ngpc_t* h, uint32_t address, uint8_t* out, uint32_t len) {
+    if (!h || !out) return -1;
+    const Machine* m = reinterpret_cast<const Machine*>(h);
+    const bool in_chip0 = address >= 0x200000 && uint64_t(address) + len <= 0x400000;
+    const bool in_chip1 = address >= 0x800000 && uint64_t(address) + len <= 0xA00000;
+    if (!in_chip0 && !in_chip1) return -1;
+    for (uint32_t i = 0; i < len; ++i) out[i] = m->mem[address + i];
+    return 0;
+}
+
 /* ⚡ THE COIN CELL. Hand the console the RAM it had when it was last switched off --
  * and hand it over BEFORE resetting, because `ngpc_reset` consults the marker INSIDE
  * that RAM to decide whether this is a first-ever boot or a resume. Restoring it after
@@ -603,7 +621,11 @@ NGPC_API int ngpc_run(ngpc_t* h, uint32_t max_instrs,
         if (!m->breakpoints.empty()) {
             bool hit = false;
             for (uint32_t bp : m->breakpoints) if (bp == m->cpu.pc) { hit = true; break; }
-            if (hit && i > 0) { s.stop_status = NGPC_BREAKPOINT; s.stop_pc = m->cpu.pc; break; }
+            if (hit && (i > 0 || m->break_on_first)) {
+                s.stop_status = NGPC_BREAKPOINT; s.stop_pc = m->cpu.pc;
+                m->break_stop_pc = m->cpu.pc;
+                break;
+            }
         }
 
         const bool want_record = out_records && s.emitted < records_cap;
@@ -1090,7 +1112,11 @@ NGPC_API int ngpc_run_frames(ngpc_t* h, uint32_t frames, uint32_t max_instrs,
         if (chunk > 4096u) chunk = 4096u;
         if (chunk > budget) chunk = budget;
         ngpc_summary_t s;
+        // Only a first slice resuming from the breakpoint just stopped on skips it.
+        m->break_on_first = total.executed > 0 || m->cpu.pc != m->break_stop_pc;
+        m->break_stop_pc = 0xFFFFFFFFu;
         ngpc_run(h, chunk, nullptr, 0, &s);
+        m->break_on_first = false;
 
         total.executed     += s.executed;
         total.total_cycles += s.total_cycles;
@@ -2734,6 +2760,7 @@ NGPC_API int ngpc_set_breakpoints(ngpc_t* h, const uint32_t* pcs, uint32_t n) {
     if (!h) return -1;
     Machine* m = reinterpret_cast<Machine*>(h);
     m->breakpoints.assign(pcs, pcs + n);
+    m->break_stop_pc = 0xFFFFFFFFu;
     return 0;
 }
 

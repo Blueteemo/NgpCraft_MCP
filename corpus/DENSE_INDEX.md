@@ -116,7 +116,9 @@ slot is empty only if all 512 bytes are `0xFF` · a per-line DMA table rewritten
 channel reads it tears — double-buffer it and swap at re-arm (DMA §5.3b) · equal sprite
 priority: the LOWEST slot number is drawn on top · I/O `0x6E` is WDMOD and `0x6F` WDCR
 (watchdog), NOT a flash /WE control · flash wrappers: `push sr / di / … / pop sr` (never a
-closing `ei`), clear the watchdog before changing its mode, return + verify the stub status
+closing `ei`), NEVER write WDMOD around a flash stub — clear WDCR before/after and inside the
+erase stub's wait loop (101-byte stub, Storage §5.2b; switching it off killed consoles one erase
+in two), return + verify the stub status
 (Storage §5.2b) · console-only failure → one frozen binary + one-byte variants (Measuring §8.1).
 
 ---

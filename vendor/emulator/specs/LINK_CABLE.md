@@ -306,7 +306,7 @@ cartridge's own code — which is what makes the figure ours to state. (The 16.7
 period was already ours, from `K2GETechRef.txt`.)
 
 1. ✅ **Derive it from the ROM — DONE for claim (A), 2026-08-03.** The game's link tick is
-   driven by the **vertical blank interrupt**, and that is now a fact read out of the author's
+   driven by the **vertical blank interrupt**, and that is now a fact read out of Wilfried's
    own cartridge plus manufacturer documentation, citing nobody.
 
    The user interrupt vector table lives at `0x6FB8`, and the **Vertical Blanking Interrupt
@@ -631,7 +631,7 @@ its DLL. **There is a second tree**, and it is the one Android and RetroArch bui
 | tree | path | consumers |
 |---|---|---|
 | desktop | `cpp/src/` | the Python shell (ctypes DLL) |
-| libretro | `Ngpcraft_emulator_lirbreto/core/src/` | **Android** (`ngpcraft.coreDir`) and RetroArch |
+| libretro | `NGPC_RAG/04_MY_PROJECTS/Ngpcraft_emulator_lirbreto/core/src/` | **Android** (`ngpcraft.coreDir`) and RetroArch |
 
 They had drifted **in both directions**, silently. Both were wrong about something:
 

@@ -616,28 +616,32 @@
   {
    "id": "IO_0x6E_IS_WDMOD_NOT_FLASH_WE",
    "opcode_pattern": "ld (0x6E),0x14 / ld (0x6F),0xB1",
-   "title": "I/O 0x6E is WDMOD and 0x6F is WDCR (watchdog) -- NOT a cartridge /WE control",
+   "title": "I/O 0x6E is WDMOD and 0x6F is WDCR (watchdog) -- NOT a cartridge /WE control; never write WDMOD around a flash stub",
    "category": "memory_layout",
-   "severity": "info",
+   "severity": "crash",
    "symptoms": [
-    "Flash code commented 'assert /WE' that actually reconfigures the watchdog"
+    "Flash code commented 'assert /WE' that actually reconfigures the watchdog",
+    "Console switches itself off during a save that erases a block, at random (one erase in two); no system power request (0x6F85 clear), the target block not even erased; never reproduced on an emulator"
    ],
    "root_cause": "Toshiba IO900H.H (the 900/H header of the SDK): `WDMOD 0x6e` (watchdog mode), `WDCR 0x6f` (watchdog control; 0x4E = clear, 0xB1 = disable code). The common flash stub prologue `ld (0x6E),0x14 / ld (0x6F),0xB1` is the two-step WATCHDOG DISABLE (clear WDTE in WDMOD, then B1 to WDCR), not a bus write-enable. Headers for other chips of the family (IO900.H, IO900L.H) place WDMOD at 0x5C -- wrong for this machine.",
    "affected_instructions": [
-    "ld (0x6E),0x14 ; 'assert /WE'",
-    "ld (0x6E),0xF0 ; 'deassert /WE'"
+    "ld (0x6E),0x14 ; 'assert /WE' (watchdog disable, step 1)",
+    "ld (0x6F),0xB1 ; watchdog disable code (step 2)",
+    "ld (0x6E),0xF0 ; 'deassert /WE' (watchdog back on with a FIXED mode)"
    ],
    "fixes": [
     {
      "op": "watchdog around a flash operation",
-     "replacement": "di (save SR first); ld (0x6F),0x4E (clear); save WDMOD; ld (0x6E),0x14; ld (0x6F),0xB1; ...flash...; restore WDMOD; ld (0x6F),0x4E; restore SR"
+     "replacement": "di (save SR first); NEVER write WDMOD (0x6E); ld (0x6F),0x4E right before and right after the call; erase stub clears the watchdog inside its wait loop: insert 08 6F 4E (ld (0x6F),0x4E) at offset 0x35 of the 98-byte StarGunner-style stub and re-aim the backward jump 66 ED -> 66 EA (101 bytes, copy length 0x65); restore SR"
     }
    ],
    "notes": [
-    "Changing the mode before clearing the counter makes the result depend on how long since the last VBlank clear -- an untested timing race, clear first."
+    "The earlier advice (clear first, save WDMOD, disable, restore the saved mode) was an untested hypothesis; the disable/re-enable pair itself is what switched consoles off.",
+    "Rare erases hide it: append-only slots that erase once every ~30 saves can ship unseen; a save that fills a block erases on every save and meets it at once.",
+    "8 KB erase measured ~57 ms on a cartridge vs a ~100 ms watchdog; a modern flash cart can be slower -- clearing inside the wait loop makes the length irrelevant."
    ],
-   "validated_on_hw": false,
-   "validation_ref": "Toshiba IO900H.H (SDK t900 CUSTOMIZ/C900_H); TMP95C061 datasheet section 3.13 (watchdog)"
+   "validated_on_hw": true,
+   "validation_ref": "Console, 2026-10-17, modern flash cart: block erases with the watchdog switched off killed the console one erase in two; with WDMOD never written and the loop-clearing stub, repeated erases and the game's real save pass. Toshiba IO900H.H (SDK t900 CUSTOMIZ/C900_H); TMP95C061 datasheet section 3.13 (watchdog)"
   },
   {
    "id": "FLASH_WRAPPER_INTERRUPTS_AND_STATUS",

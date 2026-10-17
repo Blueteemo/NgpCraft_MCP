@@ -3,6 +3,15 @@
 
 ## Unreleased
 
+- **Flash saves: the watchdog is never switched off any more (validated on a console).** The
+  templates' erase stub disabled it (`0x14`→WDMOD, `0xB1`→WDCR) and turned it back on with a fixed
+  `0xF0`; on hardware a block erase then switched the console off one time in two, with no power
+  request and the block not even erased, and no emulator showed it. The vendored templates
+  (base, cavegen, platformer, racer) now never write WDMOD, clear WDCR around each call, and use a
+  101-byte erase stub that clears the watchdog inside its wait loop. `bugs_silicon.json`
+  (`IO_0x6E_IS_WDMOD_NOT_FLASH_WE`: now `crash`, validated on hardware, new fix) and the Storage
+  pages (rule 2 of §5.2b, the stub listing) say the same. Restart the server for `doc_search`.
+
 - **NgpCraft Studio support: four `ngpc_studio_*` tools and a rules sheet, for agents writing GB Studio
   projects compiled for the NGPC by the NgpCraft V3.** `ngpc_studio_event` gives the exact JSON of the 156
   GB Studio events (fields, defaults, a valid example, NGPC status) — event JSON is what agents invent.
