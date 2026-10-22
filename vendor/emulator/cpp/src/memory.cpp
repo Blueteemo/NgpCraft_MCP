@@ -1160,11 +1160,14 @@ void Machine::flash_program(int chip, uint32_t base, uint32_t addr, uint8_t data
      *
      * `flash_fail_cycles` defaults to kFlashNever for exactly that reason. A finite value
      * gives the DQ5 behaviour the AMD datasheets describe, for a part that has it. */
-    const bool impossible = (data & uint8_t(~before)) != 0;
+    /* Measured 2026-10-22 (hw_test_flash_violation, emulator issue #27): a 1 asked over
+     * a 0 completes like any program and leaves the AND, no DQ5. A finite
+     * `flash_fail_cycles` keeps the datasheet DQ5 behaviour for a part that has it. */
+    const bool fails = (data & uint8_t(~before)) != 0 && flash_fail_cycles != kFlashNever;
     flash_begin_busy(chip,
-                     impossible ? flash_fail_cycles : flash_program_cycles,
+                     fails ? flash_fail_cycles : flash_program_cycles,
                      uint8_t(~data & 0x80),
-                     impossible ? uint8_t(FlashFailed) : uint8_t(FlashRead));
+                     fails ? uint8_t(FlashFailed) : uint8_t(FlashRead));
 }
 
 void Machine::flash_erase_block(int chip, uint32_t base, uint32_t addr) {
@@ -1347,12 +1350,13 @@ bool Machine::flash_id_read(uint32_t addr, uint8_t& out) const {
     /* The device ID names the SIZE, and the BIOS reads it to know how big the cart is.
      * SDK FlashMem.txt gives three parts (4 / 8 / 16 Mbit); the manufacturer byte is
      * Toshiba's 0x98. Hardcoding one size told every cartridge it was 8 Mbit. */
-    switch (addr - base) {
+    /* Measured 2026-10-22: `98 xx 00 80` repeated across the whole window; the retail
+     * BIOS reads it again at the last block's base (emulator issue #27). */
+    switch ((addr - base) & 3) {
         case 0: out = kFlashManufacturerId; return true;   /* 0x98 = Toshiba */
         case 1: out = flash_device_id(chip); return true;   /* the SIZE, decided once */
-        case 2: out = 0x02;                 return true;
-        case 3: out = kFlashDeviceId3;      return true;   /* the BIOS masks it with 0xF8 and wants 0x80 */
-        default: out = 0xFF; return true;
+        case 2: out = 0x00;                 return true;   /* block protection: none */
+        default: out = kFlashDeviceId3;     return true;   /* the BIOS masks it with 0xF8 and wants 0x80 */
     }
 }
 
