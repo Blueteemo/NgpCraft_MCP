@@ -13,8 +13,8 @@ Install once, and every Claude Code / Cursor / Claude Desktop session gains the 
 
 > **Using this from an AI agent? Read [AGENT_GUIDE.md](AGENT_GUIDE.md) first.**
 > It maps symptom → tool, explains the save-state workflow for reproducing a user's bug,
-> and covers BIOS requirements for commercial-game compatibility checks, plus the
-> bundled HLE BIOS used by `ngpc_studio_run`. It is also served as the MCP resource
+> and covers the default HLE BIOS used by native runs and Studio games, plus the
+> limits of commercial-game compatibility checks. It is also served as the MCP resource
 > `ngpc://doc/agent_guide`.
 
 ---
@@ -81,7 +81,7 @@ Any of these prompts should now work:
 | `ngpc_font_bake` | stub (v0.3) | PNG → NGPC 2bpp font data — bake pipeline lives outside the live editor |
 | `ngpc_disasm` | working | Disassemble ROM/byte range via ngpc_disasm.py bridge |
 | `ngpc_emu_rom_info` | working | Parse ROM header + bootstrap reset state via NgpCraft emulator |
-| `ngpc_emu_native_run` | working | **Runs** the game on the native C++ core: load a player save state (`.s0`), hold buttons, advance frames, return registers + a beam-accurate screenshot. For commercial games, use a real `bios.bin` supplied by the user. |
+| `ngpc_emu_native_run` | working | **Runs** the game on the native C++ core: load a player save state (`.s0`), hold buttons, advance frames, return registers + a beam-accurate screenshot. Uses the bundled clean-room HLE BIOS by default; optionally pass `bios_path` for a real BIOS. |
 | `ngpc_emu_peek` | working | Read bytes from emulated memory bus |
 | `ngpc_emu_decode` | working | Decode one TLCS-900 instruction at address |
 | `ngpc_emu_step_trace` | working | Run N instructions from boot/address, return trace + CPU state |
@@ -129,7 +129,7 @@ For `ngpc_png_to_sprite` / `ngpc_png_to_tilemap`, PNG decoding goes through `png
 
 The `ngpc_emu_*` tools spawn `python vendor/emulator/ngpc_emu.py <cmd> --json` (Python 3 required on the host). They cover ROM parsing, memory bus reads, decode/execute and the K2GE inspectors, and they read **static** state — a ROM at reset or a save state.
 
-`ngpc_emu_native_run` is the exception: it spawns `python vendor/emulator/ngpc_native.py run --json` and **executes the machine** on the native C++ core (VDP, PSG, IRQ and the timing model), drawing the frame line by line as the beam passes. It needs the compiled core in `vendor/emulator/cpp/build/` and, for most commercial games, a real `bios.bin`.
+`ngpc_emu_native_run` is the exception: it spawns `python vendor/emulator/ngpc_native.py run --json` and **executes the machine** on the native C++ core (VDP, PSG, IRQ and the timing model), drawing the frame line by line as the beam passes. It needs the compiled core in `vendor/emulator/cpp/build/`. When `bios_path` is omitted, it loads the bundled `vendor/emulator/hle_bios/bios_hle.bin` if present; a real `bios.bin` is optional. The result's `bios` field reports the supplied path, `"hle"` for the fallback, or `null` if neither image is available.
 
 > ⏱️ **It is timed like hardware.** The raw core defaults to free instruction fetch for
 > backward compatibility, which runs ~2.9× too fast; this bridge applies the
@@ -150,13 +150,16 @@ The `ngpc_emu_*` tools spawn `python vendor/emulator/ngpc_emu.py <cmd> --json` (
 |---|---|
 | the server | **Node 20+** |
 | every `ngpc_emu_*` tool | **Python 3** on PATH |
-| native commercial-game runs and compatibility checks | a real **`bios.bin`**, supplied by you — never shipped here |
+| `ngpc_emu_native_run` BIOS | bundled **HLE BIOS** by default when present; optionally supply a real **`bios.bin`** via `bios_path` |
 | `ngpc_studio_run` | the bundled dedicated **HLE BIOS** (or `bios_path` for a real BIOS) |
 
-⚠️ **For commercial-game compatibility checks, use a real BIOS.** Without the BIOS
-services and interrupt vectors a game expects, the CPU can fail while the screen still
-shows a plausible frame. `ngpc_studio_run` is the exception: its generated games use the
-dedicated clean-room HLE BIOS bundled here. *Metal Slug — 2nd Mission* checks a boot-time
+⚠️ **Report which BIOS was used when drawing compatibility conclusions.** The bundled
+HLE BIOS supports homebrew and most commercial games, but an HLE result does not prove
+compatibility with a real BIOS or hardware. Pass `bios_path` when a game needs BIOS
+services the HLE does not implement, or when reproducing a real-BIOS run. If neither a
+real BIOS nor the HLE image is loaded, missing services and interrupt vectors can leave
+a plausible frame on screen even after the CPU fails. `ngpc_studio_run` also uses the
+bundled HLE BIOS by default. *Metal Slug — 2nd Mission* checks a boot-time
 BIOS fingerprint in char RAM; the current native hand-off reset restores it from the
 cartridge when missing (`vendor/emulator/core/bios_fingerprint.py`). Older save states
 may still retain the previous disabled-controls state; retest from a fresh reset.

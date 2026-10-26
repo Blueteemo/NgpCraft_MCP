@@ -11,23 +11,29 @@ in what order, and — just as important — what each one **cannot** tell you.
 
 ---
 
-## ⚠️ Read this first: BIOS requirements for commercial-game checks
+## ⚠️ Read this first: BIOS selection and compatibility limits
 
-For commercial-game native runs and compatibility checks, use a real `bios.bin`,
-supplied by the user. It is not shipped here and never will be. `ngpc_studio_run`
-is the exception: Studio games use the dedicated clean-room HLE BIOS bundled here;
-the JS interpreter tools do not need a real BIOS.
+`ngpc_emu_native_run` uses the bundled clean-room HLE BIOS
+(`vendor/emulator/hle_bios/bios_hle.bin`) when `bios_path` is omitted and that file
+is present. It supports homebrew and most commercial games. A real `bios.bin` is
+optional, supplied by the user; it is not shipped here and never will be.
+`ngpc_studio_run` also uses the bundled HLE BIOS by default; the JS interpreter
+tools do not need a real BIOS.
 
 **Without the BIOS services a game expects, the picture can still look plausible.** The interrupt
-vector table lives in the BIOS. With no BIOS it is all zeroes, so the first interrupt
+vector table lives in the BIOS. If neither a real BIOS nor the HLE image is loaded,
+it is all zeroes, so the first interrupt
 sends the PC to address 0 and the game is dead — while the screen keeps showing the last
 thing it drew. You will see a normal-looking frame and conclude the game works.
 
 This is not hypothetical: it is the first mistake made while building these tools, and it
 cost an hour of chasing an "input bug" that was a dead CPU.
 
-So: **for commercial games, pass `bios_path`, and if the user has no real BIOS, say so
-before drawing compatibility conclusions.** *Metal Slug — 2nd Mission* checks a boot-time
+So: **report which BIOS was used before drawing compatibility conclusions.** The native
+run result's `bios` field reports the supplied path, `"hle"` for the fallback, or `null`
+if neither image is available. HLE success does not prove real-BIOS or hardware
+compatibility. Pass `bios_path` when a game needs services the HLE does not implement,
+or when reproducing a real-BIOS run. *Metal Slug — 2nd Mission* checks a boot-time
 BIOS fingerprint in char RAM. The current native hand-off reset restores it from the
 cartridge when missing (`vendor/emulator/core/bios_fingerprint.py`), preventing the
 disabled fire/jump behaviour on a fresh reset. Older save states may retain the previous
@@ -70,7 +76,7 @@ Then you can replay their exact machine:
 // "what happens if I press A right here?"
 ngpc_emu_native_run {
   rom_path: "…/GAME.ngc",
-  bios_path: "…/bios.bin",          // ← use for commercial-game compatibility checks
+  bios_path: "…/bios.bin",          // ← optional; omit to use the bundled HLE BIOS
   state_path: "…/GAME.s0",
   hold: "A",
   frames: 30,
@@ -109,8 +115,8 @@ script, text redrawn as a whole, saves = one slot for a big game...): `ngpc_doc_
 
 `ngpc_studio_run` boots with the clean-room **HLE BIOS** shipped in `vendor/emulator/hle_bios/`: the code the
 V3 generates only uses the BIOS services it implements, and it is what the editor's own player runs. The
-warning above (no BIOS = a lying picture) is about commercial games and C code calling other services; pass
-`bios_path` to run a real BIOS. It counts **video frames** (60 a second) with the cartridge's wait-states:
+compatibility limits above also apply to commercial games and C code calling services the HLE does not
+implement; pass `bios_path` to run a real BIOS. It counts **video frames** (60 a second) with the cartridge's wait-states:
 a slow scene init shows as frames of the same picture — look at the screenshots, not only at the variables.
 
 ## Symptom → tool
@@ -234,7 +240,8 @@ are two specific faults, not an audit.
 - **The compiled core** at `vendor/emulator/cpp/build/ngpc_core.dll` for
   `ngpc_emu_native_run`. A prebuilt Windows x64 binary ships here; on other platforms:
   `cmake -S vendor/emulator/cpp -B vendor/emulator/cpp/build && cmake --build vendor/emulator/cpp/build`
-- **A real `bios.bin`** from the user, recommended for native commercial-game runs and
-  compatibility checks. `ngpc_studio_run` uses the bundled dedicated HLE BIOS by default;
-  the JS interpreter tools do not need a real BIOS. See the warning at the top.
+- **BIOS for native runs:** `ngpc_emu_native_run` uses the bundled HLE image by default
+  when present; optionally pass `bios_path` for a user-supplied real `bios.bin`.
+  `ngpc_studio_run` also defaults to HLE. Report the selected BIOS and the compatibility
+  limits above; the JS interpreter tools do not need a real BIOS.
 - **Node 20+** for the server itself.
